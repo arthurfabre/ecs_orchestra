@@ -1,20 +1,20 @@
 package Orchestra;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 
 public class Conductor {
     protected SoundSystem soundSystem;
     protected Orchestra orchestra;
+    protected int longestNumberOfNotes = 0;
+    protected final int RYTHM = 200;
     
     public Conductor(String filename) {
         soundSystem  = new SoundSystem();
         soundSystem.init();
         orchestra = new Orchestra();
-                
-        FileParser file = new FileParser(filename);
         
-        int longestNumberOfNotes = 0;
+        FileParser file = new FileParser(filename);
+        file.setMusicianClass("class.txt");
         
         while (file.ready()) {
             int seat = orchestra.getNextAvailableSeat();
@@ -33,27 +33,16 @@ public class Conductor {
             if(musician.getNumberOfNotes() > longestNumberOfNotes) {
                 longestNumberOfNotes = musician.getNumberOfNotes();
             }
-            
-            orchestra.seatMusician(musician, seat);
-            
-        }
-                    
-        for(int i=0; i<longestNumberOfNotes; i++){
-            for(Musician musician : orchestra.getArrayOfMusicians()) {
-                musician.playNextNote();
-            }
             try {
-                Thread.sleep(500); 
-            } catch (InterruptedException e) {
+                orchestra.addMusician(musician, seat);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
             }
-        }            
-        
+        }
     }
     
     public Musician createMusician(String musicianType, Integer seat) {
         Musician musician;
-        
-        
         
         try {
             musician = (Musician) Class.forName("Orchestra." + musicianType).getConstructor(SoundSystem.class,Integer.class).newInstance(soundSystem, seat);
@@ -64,7 +53,21 @@ public class Conductor {
         return musician;
     }
     
+    public void play() {
+        for(int i=0; i<longestNumberOfNotes; i++){
+            for(Musician musician : orchestra.getArrayOfMusicians()) {
+                musician.playNextNote();
+            }
+            try {
+                Thread.sleep(RYTHM); 
+            } catch (InterruptedException e) {
+            }
+        }
+    }
+    
     public static void main(String[] args){
        Conductor conductor = new Conductor(args[0]);
+       
+       conductor.play();
     }
 }
