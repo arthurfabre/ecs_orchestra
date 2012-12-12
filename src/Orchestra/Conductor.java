@@ -31,14 +31,12 @@ public class Conductor {
         while (file.ready()) {
             // get the next available seat in the orchestra.
             int seat = orchestra.getNextAvailableSeat();
-            System.out.println(seat);
             
             // Get the object array containing the class name, volume and notes array for that line.
             Object[] fileLine = file.parseLine();
             // Call the createMusician method with the classname (fileLine[0]), the designated seat, the volume (fileLine[1]) and the array of notes
             // (fileLine[2])
             createMusician((String)fileLine[0], seat, (String)fileLine[1], (int[])fileLine[2]);
-            System.out.println("musician created!");
         }
     }
     
@@ -80,13 +78,13 @@ public class Conductor {
         // the next free seat if there is one.
         try {
             Musician previousMusician = orchestra.addMusician(musician, seat);
-            if (previousMusician != null) {
+            if (previousMusician != null && previousMusician.isAlive()) {
                 int newSeat = orchestra.getNextAvailableSeat();
                 orchestra.addMusician(previousMusician, newSeat);
                 previousMusician.setSeat(newSeat);
             }
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+       System.err.println(e.getCause());
         }
     }
     
@@ -95,11 +93,11 @@ public class Conductor {
     // note he was meant to play to the end of the array.
     public void musicianReplacer(MusicianEndOfLifeException e) {
         createMusician(e.getMusician().getClass().getSimpleName(), e.getMusician().getSeat(), e.getMusician().getVolume(), Arrays.copyOfRange(e.getMusician().getNotes(), e.getMusician().getNextNote(), e.getMusician().getNotes().length - 1));
+        System.out.println("Creating new " + e.getMusician().getClass().getSimpleName());
     }
     
     // play method. iterates over all the musicians in the orchestra and instructs them to play their notes.
     public void play() {
-        System.out.println("notes: " + longestNumberOfNotes);
         // Only run as long as least as one musician still has notes to play.
         for(int i=0; i<longestNumberOfNotes; i++){
             // Check if the orchestra contains a LeadViolinist.
@@ -117,18 +115,19 @@ public class Conductor {
                     // If a musician reports he has played the maximum number of notes he can, replace him with the musicianReplacer method.
                 } catch (MusicianEndOfLifeException e) {
                     musicianReplacer(e);
+                    System.out.println("Replacing musician / leadviolin");
                 }
             // If the orchestra does not contain a LeadViolinist, have the conductor instrcut all the musicians to play.    
             } else {
                 // for every musician, play their next note.
                 for(Musician musician : orchestra.getArrayOfMusicians()) {
-                    System.out.println("id: " + musician.getType());
                     try {
                         musician.playNextNote();
                         
                     // If a musician reports he has played the maximum number of notes he can, replace him with the musicianReplacer method.
                     } catch (MusicianEndOfLifeException e) {
                         musicianReplacer(e);
+                        System.out.println("Replacing musician / conducotr");
                     }    
                 }
             }

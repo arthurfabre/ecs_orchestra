@@ -17,6 +17,8 @@ public abstract class Musician {
     protected int previousNote;
     // Store the volume the musican is currently playing at.
     protected int setVolume;
+    // Boolean to store if a musician is alive or not. A musician is alive as long as he hasn't played all of his 100 notes.
+    protected boolean isAlive = true;
         
     // Musician constructor. Takes an Instrument ID, a loud volume, a soft volume, a SoundSystem and a seat as parameters.
     public Musician(int instrumentID, int softVolume, int loudVolume, SoundSystem soundSystem, Integer seat) {
@@ -58,6 +60,7 @@ public abstract class Musician {
             ++nextNote;
         } else if (nextNote > MAX_NOTES) {
             soundSystem.stopNote(seat, arrayOfNotes[previousNote], setVolume);
+            isAlive = false;
             throw new MusicianEndOfLifeException(this);
         }
         
@@ -101,5 +104,10 @@ public abstract class Musician {
             // Else return "soft".
             return "soft";
         }
+    }
+    
+    // return if the musician is alive or not.
+    public boolean isAlive() {
+        return isAlive;
     }
 }
