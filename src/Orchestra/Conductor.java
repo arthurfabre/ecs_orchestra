@@ -90,33 +90,49 @@ public class Conductor {
         }
     }
     
+    // musicianReplacer method. Creates an identical musician to replace one that has reached EOL.
+    // get the simple name (no package) of the "dead" musician, get his seat number, get the volume and a copy of his notes, only ranging from the next 
+    // note he was meant to play to the end of the array.
     public void musicianReplacer(MusicianEndOfLifeException e) {
         createMusician(e.getMusician().getClass().getSimpleName(), e.getMusician().getSeat(), e.getMusician().getVolume(), Arrays.copyOfRange(e.getMusician().getNotes(), e.getMusician().getNextNote(), e.getMusician().getNotes().length - 1));
     }
     
+    // play method. iterates over all the musicians in the orchestra and instructs them to play their notes.
     public void play() {
         System.out.println("notes: " + longestNumberOfNotes);
+        // Only run as long as least as one musician still has notes to play.
         for(int i=0; i<longestNumberOfNotes; i++){
+            // Check if the orchestra contains a LeadViolinist.
             if (orchestra.getArrayOfMusicians().containsGeneric("LeadViolinist")) {
                 try {
+                    // If so, get the LeadViolinist from the orchestra.
                     LeadViolinist leadViolinist = (LeadViolinist)orchestra.getArrayOfMusicians().getGeneric("LeadViolinist");
+                    // Initialize the LeadViolinist with the orchestra so he can communicate with all the other musicians.
                     leadViolinist.init(orchestra);
+                    // Play next note. Instructs the LeadViolinist to play his next note and to then instruct the other musicians to play their next
+                    // note.
                     leadViolinist.playNextNote();
                     System.out.println("LeadViolonist");
+                    
+                    // If a musician reports he has played the maximum number of notes he can, replace him with the musicianReplacer method.
                 } catch (MusicianEndOfLifeException e) {
                     musicianReplacer(e);
                 }
+            // If the orchestra does not contain a LeadViolinist, have the conductor instrcut all the musicians to play.    
             } else {
+                // for every musician, play their next note.
                 for(Musician musician : orchestra.getArrayOfMusicians()) {
                     System.out.println("id: " + musician.getType());
                     try {
                         musician.playNextNote();
+                        
+                    // If a musician reports he has played the maximum number of notes he can, replace him with the musicianReplacer method.
                     } catch (MusicianEndOfLifeException e) {
                         musicianReplacer(e);
                     }    
                 }
             }
-            
+            // Sleep for a specified duration to play the notes at a reasonable rate.
             try {
                 Thread.sleep(RYTHM);
             } catch (InterruptedException e) {
@@ -124,6 +140,7 @@ public class Conductor {
         }
     }
     
+    // Main method. Creates a conductor and calls the play method to start the music.
     public static void main(String[] args){
        Conductor conductor = new Conductor(args[0]);
        conductor.play();          
