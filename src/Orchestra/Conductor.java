@@ -1,6 +1,7 @@
 package Orchestra;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 
 public class Conductor {
     protected SoundSystem soundSystem;
@@ -20,28 +21,11 @@ public class Conductor {
             int seat = orchestra.getNextAvailableSeat();
             
             Object[] fileLine = file.parseLine();
-            Musician musician = createMusician((String)fileLine[0], seat);
-            
-            if(((String)fileLine[1]).equalsIgnoreCase("loud")){
-                musician.playLoud();
-            } else {
-                musician.playSoft();
-            }
-            
-            musician.readMusic((int[])fileLine[2]);
-            
-            if(musician.getNumberOfNotes() > longestNumberOfNotes) {
-                longestNumberOfNotes = musician.getNumberOfNotes();
-            }
-            try {
-                orchestra.addMusician(musician, seat);
-            } catch (Exception e) {
-                System.err.println(e.getMessage());
-            }
+            createMusician((String)fileLine[0], seat, (String)fileLine[1], (int[])fileLine[2]);
         }
     }
     
-    public Musician createMusician(String musicianType, Integer seat) {
+    public void createMusician(String musicianType, Integer seat, String volume, int[] notes) {
         Musician musician;
         
         try {
@@ -50,16 +34,51 @@ public class Conductor {
             System.err.println("Unsupported Musician Type!");
             musician = null;
         }
-        return musician;
+        
+        if(volume.equalsIgnoreCase("loud")){
+                musician.playLoud();
+            } else {
+                musician.playSoft();
+            }
+            
+        musician.readMusic(notes);
+            
+        if(musician.getNumberOfNotes() > longestNumberOfNotes) {
+            longestNumberOfNotes = musician.getNumberOfNotes();
+        }
+        try {
+            orchestra.addMusician(musician, seat);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+    }
+    
+    public void exceptionHandler(MusicianEndOfLifeException e) {
+        createMusician(e.getMusician().getClass().getSimpleName(), e.getMusician().getSeat(), e.getMusician().getVolume(), Arrays.copyOfRange(e.getMusician().getNotes(), e.getMusician().getNextNote(), e.getMusician().getNotes().length - 1));
     }
     
     public void play() {
         for(int i=0; i<longestNumberOfNotes; i++){
-            for(Musician musician : orchestra.getArrayOfMusicians()) {
-                musician.playNextNote();
+            if (orchestra.getArrayOfMusicians().containsGeneric("LeadViolinist")) {
+                try {
+                    LeadViolinist leadViolinist = (LeadViolinist)orchestra.getArrayOfMusicians().getGeneric("LeadViolinist");
+                    leadViolinist.init(orchestra, this, RYTHM, longestNumberOfNotes);
+                    leadViolinist.playNextNote();
+                } catch (MusicianEndOfLifeException e) {
+                    exceptionHandler(e);
+                }
+            } else {
+                for(Musician musician : orchestra.getArrayOfMusicians()) {
+                    try {
+                        musician.playNextNote();
+                    } catch (MusicianEndOfLifeException e) {
+                        exceptionHandler(e);
+                    }    
+                }
             }
+            
             try {
-                Thread.sleep(RYTHM); 
+                Thread.sleep(RYTHM);
             } catch (InterruptedException e) {
             }
         }
